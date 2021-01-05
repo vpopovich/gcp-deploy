@@ -12,6 +12,7 @@ env:
   GITHUB_REF: ${{ github.ref }}
   IMAGE: test-backend
   REGISTRY_HOSTNAME: gcr.io
+  PROJECT_ID: ${{ secrets.RUN_PROJECT }}
 
 jobs:
   setup-build-publish-deploy:
