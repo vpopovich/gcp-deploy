@@ -47,7 +47,7 @@ jobs:
     steps:
       - name: Deploy the app
         uses: appleboy/ssh-action@master
-        env:
+#        env:
 #          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
 #          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 #          IMAGE_TAG: ${{ github.sha }}
