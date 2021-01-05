@@ -32,20 +32,28 @@ jobs:
       - name: gcloud Set up
         run: |
           gcloud config set project $PROJECT_ID
-#      # Build and push image to Google Container Registry
-#      - name: Build
-#        run: |
-#          gcloud builds submit -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
-#      # Deploy image to Cloud Run
-#      - name: Deploy
-#        run: |
-#          gcloud run deploy $SERVICE_NAME \
-#            --region $RUN_REGION \
-#            --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
-#            --platform managed
+
       # Build docker image
       - name: Build docker image
         run: |
-          gcloud auth configure-docker -q
           docker build -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
+          gcloud auth configure-docker -q
           docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
+  deploy:
+    name: Deploy the app
+    runs-on: self-hosted
+    needs: build_docker
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Deploy the app
+        uses: appleboy/ssh-action@master
+        env:
+#          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+#          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+#          IMAGE_TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: docker stop $(docker ps -f name=test_backend* -q);
+          docker run -d -p 3001:3001 --env-file ./deploy_env --name test_backend_$GITHUB_SHA gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
