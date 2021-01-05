@@ -55,5 +55,4 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: docker stop $(docker ps -f name=test_backend* -q);
-          docker run -d -p 3001:3001 --env-file ./deploy_env --name test_backend_$GITHUB_SHA gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
+          script: docker stop $(docker ps -f name=test_backend* -q); docker run -d -p 3001:3001 --env-file ./deploy_env --name test_backend_$GITHUB_SHA gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
