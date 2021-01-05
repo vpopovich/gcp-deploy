@@ -13,7 +13,7 @@ env:
   SERVICE_NAME: super-simple-service
 
 jobs:
-  setup-build-deploy:
+  build-docker:
     name: Setup, Build, and Deploy
     runs-on: ubuntu-latest
 
@@ -42,7 +42,7 @@ jobs:
   deploy:
     name: Deploy the app
     runs-on: self-hosted
-    needs: build_docker
+    needs: build-docker
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Deploy the app
