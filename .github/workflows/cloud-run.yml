@@ -43,7 +43,7 @@ jobs:
       - uses: google-github-actions/get-secretmanager-secrets@main
         with:
           secrets: |-
-            word:projects/1010005164042/secrets/WORD
+            word:1010005164042/WORD
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
