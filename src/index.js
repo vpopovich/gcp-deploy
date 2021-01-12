@@ -1,6 +1,8 @@
 const http = require('http');
+require('dotenv').config()
+
 function requestHandler(req, res) {
-    res.write('ok');
+    res.write(process.env.WORD);
     res.end();
 }
 const server = http.createServer(requestHandler);
