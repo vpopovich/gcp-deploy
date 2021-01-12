@@ -18,7 +18,7 @@ on:
   push:
     branches:
       - main
-
+      - secrets
 env:
   PROJECT_ID: ${{ secrets.RUN_PROJECT }}
   GCE_INSTANCE: test-backend
@@ -39,6 +39,10 @@ jobs:
           version: '290.0.1'
           service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           project_id: ${{ secrets.RUN_PROJECT }}
+      - uses: google-github-actions/get-secretmanager-secrets@main
+        with:
+          secrets: |-
+            word:$PROJECT_ID/WORD
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
@@ -57,5 +61,5 @@ jobs:
           gcloud compute instances update-container "$GCE_INSTANCE" \
             --zone "$GCE_INSTANCE_ZONE" \
             --container-image "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA" \
-            --container-env-file=${{ secrets.ENV_FILE }}
+            --container-env=[WORD=${{ steps.secrets.outputs.word }}]
 
