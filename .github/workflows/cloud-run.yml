@@ -1,112 +1,161 @@
-# Copyright 2020 Google, LLC.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-name: Build and Deploy to Google Compute Engine
-
-on:
-  push:
-    branches:
-      - main
-
-env:
-  PROJECT_ID: ${{ secrets.RUN_PROJECT }}
-  GCE_INSTANCE: test-backend
-  GCE_INSTANCE_ZONE: us-central1-a
+name: PostgreSQL service example
+on: push
 
 jobs:
-    test:
-      name: Build
-      runs-on: ubuntu-latest
-      timeout-minutes: 5
-      strategy:
-        matrix:
-          node-version: [12.x]
-      services:
-        postgres:
-          image: postgres
-          env:
-            POSTGRES_PASSWORD: postgres
-          ports:
-            - 5432:5432
-          options: >-
-            --health-cmd pg_isready
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5
+  # Label of the container job
+  container-job:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: node:12
 
-      steps:
-        - uses: actions/checkout@v2
-        - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v1
-          with:
-            node-version: ${{ matrix.node-version }}
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-        - name: Install dependencies
-          run: npm ci
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v2
 
-        - name: Migrate db
-          env:
-            CI: true
-            POSTGRES_HOST: postgres
-            POSTGRES_PORT: 5432
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: postgres
-          run: |-
-            npm run migrate
-            npm run seed
+      # Performs a clean installation of all dependencies in the `package.json` file
+      # For more information, see https://docs.npmjs.com/cli/ci.html
+      - name: Install dependencies
+        run: npm ci
 
-        - name: Run tests
-          run: npm test
-          env:
-            CI: true
-            POSTGRES_HOST: postgres
-            POSTGRES_PORT: 5432
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: postgres
-#  setup-build-publish-deploy:
-#    name: Setup, Build, Publish, and Deploy
-#    runs-on: ubuntu-latest
+      - name: Connect to PostgreSQL
+        # Runs a script that creates a PostgreSQL client, populates
+        # the client with data, and retrieves data
+        run: node client.js
+        # Environment variable used by the `client.js` script to create a new PostgreSQL client.
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: postgres
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+
+## Copyright 2020 Google, LLC.
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##    http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
 #
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
+#name: Build and Deploy to Google Compute Engine
 #
-#      # Setup gcloud CLI
-#      - uses: google-github-actions/setup-gcloud@master
-#        with:
-#          version: '290.0.1'
-#          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-#          project_id: ${{ secrets.RUN_PROJECT }}
+#on:
+#  push:
+#    branches:
+#      - main
 #
-#      # Configure Docker to use the gcloud command-line tool as a credential
-#      # helper for authentication
-#      - run: |-
-#          gcloud --quiet auth configure-docker
-#      # Build the Docker image
-#      - name: Build
-#        run: |-
-#          docker build --tag "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA" .
-#      # Push the Docker image to Google Container Registry
-#      - name: Publish
-#        run: |-
-#          docker push "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA"
-#      - name: Deploy
-#        run: |-
-#          gcloud compute instances update-container "$GCE_INSTANCE" \
-#            --zone "$GCE_INSTANCE_ZONE" \
-#            --container-image "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA" \
-#            --container-env-file=${{ secrets.ENV_FILE }}
+#env:
+#  PROJECT_ID: ${{ secrets.RUN_PROJECT }}
+#  GCE_INSTANCE: test-backend
+#  GCE_INSTANCE_ZONE: us-central1-a
 #
+#jobs:
+#    test:
+#      name: Build
+#      runs-on: ubuntu-latest
+#      timeout-minutes: 5
+#      strategy:
+#        matrix:
+#          node-version: [12.x]
+#      services:
+#        postgres:
+#          image: postgres
+#          env:
+#            POSTGRES_PASSWORD: postgres
+#          ports:
+#            - 5432:5432
+#          options: >-
+#            --health-cmd pg_isready
+#            --health-interval 10s
+#            --health-timeout 5s
+#            --health-retries 5
+#
+#      steps:
+#        - uses: actions/checkout@v2
+#        - name: Use Node.js ${{ matrix.node-version }}
+#          uses: actions/setup-node@v1
+#          with:
+#            node-version: ${{ matrix.node-version }}
+#
+#        - name: Install dependencies
+#          run: npm ci
+#
+#        - name: Migrate db
+#
+#          run: |-
+#            npm run migrate
+#            npm run seed
+#          env:
+#            CI: true
+#            POSTGRES_HOST: postgres
+#            POSTGRES_PORT: 5432
+#            POSTGRES_USER: postgres
+#            POSTGRES_PASSWORD: postgres
+#            POSTGRES_DB: postgres
+#
+#        - name: Run tests
+#          run: npm test
+#          env:
+#            CI: true
+#            POSTGRES_HOST: postgres
+#            POSTGRES_PORT: 5432
+#            POSTGRES_USER: postgres
+#            POSTGRES_PASSWORD: postgres
+#            POSTGRES_DB: postgres
+##  setup-build-publish-deploy:
+##    name: Setup, Build, Publish, and Deploy
+##    runs-on: ubuntu-latest
+##
+##    steps:
+##      - name: Checkout
+##        uses: actions/checkout@v2
+##
+##      # Setup gcloud CLI
+##      - uses: google-github-actions/setup-gcloud@master
+##        with:
+##          version: '290.0.1'
+##          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+##          project_id: ${{ secrets.RUN_PROJECT }}
+##
+##      # Configure Docker to use the gcloud command-line tool as a credential
+##      # helper for authentication
+##      - run: |-
+##          gcloud --quiet auth configure-docker
+##      # Build the Docker image
+##      - name: Build
+##        run: |-
+##          docker build --tag "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA" .
+##      # Push the Docker image to Google Container Registry
+##      - name: Publish
+##        run: |-
+##          docker push "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA"
+##      - name: Deploy
+##        run: |-
+##          gcloud compute instances update-container "$GCE_INSTANCE" \
+##            --zone "$GCE_INSTANCE_ZONE" \
+##            --container-image "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA" \
+##            --container-env-file=${{ secrets.ENV_FILE }}
+##
