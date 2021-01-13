@@ -1,8 +1,11 @@
 const http = require('http');
+const db = require('../data/db');
 require('dotenv').config()
 
-function requestHandler(req, res) {
-    res.write(process.env.WORD);
+async function requestHandler(req, res) {
+    const todos = await db("todo"); // making a query to get all todos
+    // res.json({ todos });
+    res.write(JSON.stringify({ todos }));
     res.end();
 }
 const server = http.createServer(requestHandler);
