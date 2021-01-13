@@ -3,8 +3,8 @@ const db = require('../data/db');
 require('dotenv').config()
 
 async function requestHandler(req, res) {
-    const todos = await db("todo"); // making a query to get all todos
-    // res.json({ todos });
+    const todos = await db("todo");
+    res.json({ todos });
     res.write(JSON.stringify({ todos }));
     res.end();
 }
