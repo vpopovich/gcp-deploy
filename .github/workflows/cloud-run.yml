@@ -32,6 +32,7 @@ jobs:
         run: |-
           npm run migrate
           npm run seed
+          npm test
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
