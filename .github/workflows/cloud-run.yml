@@ -25,6 +25,39 @@ env:
   GCE_INSTANCE_ZONE: us-central1-a
 
 jobs:
+    test:
+      name: Build
+      runs-on: self-hosted
+      timeout-minutes: 5
+      strategy:
+        matrix:
+          node-version: [12.x]
+      needs: build
+      services:
+        postgres:
+          image: postgres:11.4
+          env:
+            POSTGRES_USER: myuser
+            POSTGRES_PASSWORD: mypass
+            POSTGRES_DB: gcp_deploy
+          ports: ["5432:5432"]
+          options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      steps:
+        - uses: actions/checkout@v2
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v1
+          with:
+            node-version: ${{ matrix.node-version }}
+        - run: npm ci
+        - run: npm test
+          env:
+            CI: true
+            POSTGRES_HOST: 127.0.0.1
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: myuser
+            POSTGRES_PASSWORD: mypass
+            POSTGRES_DB: gcp_deploy
+
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
