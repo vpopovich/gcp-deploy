@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+env:
+  PROJECT_ID: ${{ secrets.RUN_PROJECT }}
+  GCE_INSTANCE: test-backend
+  GCE_INSTANCE_ZONE: us-central1-a
+
 jobs:
   tests:
     runs-on: ubuntu-latest
