@@ -27,7 +27,7 @@ env:
 jobs:
     test:
       name: Build
-      runs-on: self-hosted
+      runs-on: ubuntu-latest
       timeout-minutes: 5
       strategy:
         matrix:
