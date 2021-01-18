@@ -4,7 +4,7 @@ require('dotenv').config()
 
 async function requestHandler(req, res) {
     const todos = await db("todo");
-    res.json({ todos });
+    // res.json({ todos });
     res.write(JSON.stringify({ todos }));
     res.end();
 }
