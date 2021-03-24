@@ -82,4 +82,4 @@ jobs:
         run: |-
           gcloud compute ssh "$GCE_INSTANCE" \
              --zone "$GCE_INSTANCE_ZONE" \
-             --command 'docker rmi $(docker images --filter "dangling=true" -q --no-trunc)'
+             --command 'docker image prune --all --force'
