@@ -54,8 +54,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@master
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@master
         with:
           version: '290.0.1'
           service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -63,7 +63,8 @@ jobs:
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
-      - run: |-
+      - name: Configure Docker
+        run: |-
           gcloud --quiet auth configure-docker
       # Build the Docker image
       - name: Build
@@ -78,8 +79,31 @@ jobs:
           gcloud compute instances update-container "$GCE_INSTANCE" \
             --zone "$GCE_INSTANCE_ZONE" \
             --container-image "gcr.io/$PROJECT_ID/$GCE_INSTANCE-image:$GITHUB_SHA"
+
+  clean-up:
+    name: Clean up docker images
+    runs-on: ubuntu-latest
+      needs: tests
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Setup gcloud CLI
+          uses: google-github-actions/setup-gcloud@master
+          with:
+            version: '290.0.1'
+            service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+            project_id: ${{ secrets.RUN_PROJECT }}
+
+        # Configure Docker to use the gcloud command-line tool as a credential
+        # helper for authentication
+        - name: Configure Docker
+          run: |-
+            gcloud --quiet auth configure-docker
+
       - name: Cleanup
-        run: |-
-          gcloud compute ssh "$GCE_INSTANCE" \
-             --zone "$GCE_INSTANCE_ZONE" \
-             --command 'docker image prune --all --force'
+          run: |-
+            gcloud compute ssh "$GCE_INSTANCE" \
+               --zone "$GCE_INSTANCE_ZONE" \
+               --command 'docker image prune --all --force'
